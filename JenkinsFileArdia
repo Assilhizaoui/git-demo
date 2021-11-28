@@ -1,0 +1,137 @@
+//Send Email groovy
+
+def call(Map stageParams = [:]) {
+	if (stageParams.verboseLogging > 1) {
+		echo "function start 'sendEmails'...";
+        stageParams.each { it -> 
+            echo "parameters.... '${it.key}': '${it.value}' "; 
+        };
+        echo " ";
+	}
+
+	try {
+		if (fileName.empty) {
+			echo "Emailing Test Report with no attachment...";
+			emailext  	to: "${stageParams.emailTo}",
+						from: "${stageParams.emailFrom}",
+						subject: "${stageParams.subject}",
+						body: "${stageParams.body}",
+						attachLog: stageParams.attachEventLog,
+						compressLog: stageParams.compressEventLog;
+		}
+		else {
+			echo "Emailing Test Report with attachment...";
+			emailext  	to: "${stageParams.emailTo}",
+						from: "${stageParams.emailFrom}",
+						subject: "${stageParams.subject}",
+						body: "${stageParams.body}", 
+						attachmentsPattern: "*${stageParams.fileName}*.zip",
+						attachLog: stageParams.attachEventLog,
+						compressLog: stageParams.compressEventLog;
+		}
+
+	}
+	catch(e) { 
+		echo "**********************************************************************";
+		echo " ";
+		echo " ";
+		echo "ERROR: Function 'sendEmails' - Error Exception: ${e}";
+		// echo console.Error("ERROR: Function 'sendEmails' - Error Exception: ${e}");
+		echo " ";
+		echo " ";
+		echo "**********************************************************************";
+
+	}
+	finally {}
+
+	if (stageParams.verboseLogging > 1) {
+		echo "function start 'sendEmails'...";
+	}
+
+	return true;
+}
+
+//publishCucumberReports.groovy
+def call(Map stageParams = [:]) {
+	if (stageParams.verboseLogging > 1) {
+		echo "function start 'publishCucumberReports'...";
+        stageParams.each { it -> 
+            echo "parameters.... '${it.key}': '${it.value}' "; 
+        };
+        echo " ";
+	}
+
+	try {
+
+ 		cucumber buildStatus: "${currentBuild.currentResult}",
+					fileIncludePattern: "**/*.json",
+					trendsLimit: 10,
+					classifications: [[
+						'key': 'Browser',
+						'value': "${stageParams.paramBrowser}"
+					]];
+	
+ 		// cucumber buildStatus: "${currentBuild.currentResult}",
+		// 			fileIncludePattern: "${path}\\*.json",
+		// 			trendsLimit: 10,
+		// 			classifications: [[
+		// 				'key': 'Browser',
+		// 				'value': 'Firefox'
+		// 			]]
+	}
+	catch(e) { 
+		echo "**********************************************************************";
+		echo " ";
+		echo " ";
+		echo "ERROR: Function 'publishCucumberReports' - Error Exception: ${e}";
+		// echo console.Error("ERROR: Function 'publishCucumberReports' - Error Exception: ${e}");
+		echo " ";
+		echo " ";
+		echo "**********************************************************************";
+	}
+	finally {}
+
+	if (stageParams.verboseLogging > 1) {
+		echo "function END 'publishCucumberReports'...";
+	}
+	return true;
+}
+//publishHTMLReports.groovy
+def call(Map stageParams = [:]) {
+	if (stageParams.verboseLogging > 1) {
+		echo "function start 'publishHTMLReports'...";
+        stageParams.each { it -> 
+            echo "parameters.... '${it.key}': '${it.value}' "; 
+        };
+        echo " ";
+	}
+
+
+	try {
+		publishHTML ([
+						allowMissing: true,
+						alwaysLinkToLastBuild: false,
+						keepAll: false, 
+						reportDir: "${stageParams.path}\\${stageParams.fileName}", 
+						reportFiles: 'index.html', 
+						reportName: "HTML Reports", 
+						reportTitles: "${stageParams.fileName} Reports"
+					]);
+	}
+	catch(e) { 
+		echo "**********************************************************************";
+		echo " ";
+		echo " ";
+		echo "ERROR: Function 'publishHTMLReports' - Error Exception: ${e}";
+		// echo console.Error("ERROR: Function 'publishHTMLReports' - Error Exception: ${e}");
+		echo " ";
+		echo " ";
+		echo "**********************************************************************";
+	}
+	finally {}
+
+	if (stageParams.verboseLogging > 1) { 
+		echo "function end 'publishHTMLReports' -  '${stageParams.fileName}' HTML Report...";
+	}
+	return true;
+}
